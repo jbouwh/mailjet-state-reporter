@@ -67,7 +67,7 @@
   // Setup appdaemon environment
   "runArgs": [
     "--env-file",
-    "${localWorkspaceFolder}/.devcontainer/devcontainer.env"
+    "${localWorkspaceFolder}/config/devcontainer.env"
   ]
 }
 
