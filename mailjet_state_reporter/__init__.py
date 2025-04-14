@@ -252,7 +252,7 @@ def main() -> None:
     report_days_default: str = global_settings.get("report_days", "01234")
     default_max_report_days: int = global_settings.get("default_max_report_days", 1)
 
-    state: dict[int, int]
+    state: dict[str, int]
     try:
         with open(SYNC_STATE, "r", encoding="utf-8") as state_file:
             state = json.load(state_file)
