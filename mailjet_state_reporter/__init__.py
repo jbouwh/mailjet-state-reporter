@@ -37,11 +37,11 @@ MESSAGE_FIELDS = {
     "Subject": "subject",
 }
 
-REPORT_DETAILS_FIELDS = [
-    "date_time",
-    "contact",
-    "subject",
-]
+REPORT_DETAILS_FIELDS = {
+    "date_time": 'style="white-space:nowrap;"',
+    "contact": 'style="white-space:nowrap;width:200px;"',
+    "subject": "",
+}
 
 
 def get_mailjet_data_list(
@@ -93,10 +93,8 @@ def get_subaccount_data(auth: HTTPBasicAuth) -> dict[str, dict[str, str]] | None
     }
 
 
-def time_from_timestamp(timestamp: int, global_settings: dict[str, Any]) -> str:
+def time_from_timestamp(timestamp: int, time_format: str, timezone: str) -> str:
     """Convert a timestamp to a formatted string."""
-    timezone = global_settings.get("timezone", "Europe/Amsterdam")
-    time_format = global_settings.get("time_format", "%Y-%m-%d %H:%M:%S")
     return (
         datetime.fromtimestamp(timestamp)
         .astimezone(ZoneInfo(timezone))
@@ -104,10 +102,8 @@ def time_from_timestamp(timestamp: int, global_settings: dict[str, Any]) -> str:
     )
 
 
-def time_from_iso_format(date_time: str, global_settings: dict[str, Any]) -> str:
+def time_from_iso_format(date_time: str, time_format: str, timezone: str) -> str:
     """Convert a timestamp to a formatted string."""
-    timezone = global_settings.get("timezone", "Europe/Amsterdam")
-    time_format = global_settings.get("time_format", "%Y-%m-%d %H:%M:%S")
     return (
         datetime.fromisoformat(date_time)
         .astimezone(ZoneInfo(timezone))
@@ -123,17 +119,23 @@ def gen_message_stats_html(
     delivery_stats_html = "<table>"
     for status, count in message_stats.items():
         header = status_translations.get(status, status)
-        delivery_stats_html += f"<tr><td>{header}</td><td>{count}</td></tr>"
+        delivery_stats_html += (
+            f'<tr><td style="width:200px;">{header}</td><td>{count}</td></tr>'
+        )
     delivery_stats_html += "</table>"
     return delivery_stats_html
 
 
 def gen_bounce_data_html(
-    config: dict[str, Any], message_details: dict[str, list[dict[str, Any]]]
+    config: dict[str, Any],
+    subaccount_time_format: str,
+    message_details: dict[str, list[dict[str, Any]]],
 ) -> str:
     """Generate HTML for the bounce data."""
     status_translations: dict[str, Any] = config.get("status_translations", {})
     bounce_data_html = ""
+    global_settings: dict[str, Any] = config.get("global_settings", {})
+    timezone = global_settings.get("timezone", "Europe/Amsterdam")
     for state, status_messages in message_details.items():
         bounce_data_html += f"<h4>{status_translations.get(state, state)}:</h4>"
         bounce_data_html += "<table><tr>"
@@ -142,15 +144,15 @@ def gen_bounce_data_html(
         bounce_data_html += "</tr>"
         for message in status_messages:
             bounce_data_html += "<tr>"
-            for field in REPORT_DETAILS_FIELDS:
+            for field, style in REPORT_DETAILS_FIELDS.items():
                 content = (
                     time_from_iso_format(
-                        message[field], config.get("global_settings", {})
+                        message[field], subaccount_time_format, timezone
                     )
                     if field == "date_time"
                     else message[field]
                 )
-                bounce_data_html += f"<td>{content}</td>"
+                bounce_data_html += f"<td {style}>{content}</td>"
             bounce_data_html += "</tr>"
 
         bounce_data_html += "</table>"
@@ -170,6 +172,13 @@ def send_report(
     """Send the report for the subaccount."""
     global_settings: dict[str, Any] = config.get("global_settings", {})
     status_translations: dict[str, Any] = config.get("status_translations", {})
+
+    timezone = global_settings.get("timezone", "Europe/Amsterdam")
+    report_time_format = global_settings.get("time_format", "%Y-%m-%d %H:%M:%S")
+    subaccount_time_format = subaccount["profile_details"].get(
+        "time_format", report_time_format
+    )
+
     profile_details = subaccount["profile_details"]
     delivery_stats_html = (
         status_translations.get("no_data", "No data")
@@ -192,9 +201,15 @@ def send_report(
                 "Subject": profile_details["subject"],
                 "Variables": {
                     "delivery_stats": delivery_stats_html,
-                    "bounce_data": gen_bounce_data_html(config, message_details),
-                    "rep_start": time_from_timestamp(last_ts, global_settings),
-                    "rep_end": time_from_timestamp(current_ts, global_settings),
+                    "bounce_data": gen_bounce_data_html(
+                        config, subaccount_time_format, message_details
+                    ),
+                    "rep_start": time_from_timestamp(
+                        last_ts, report_time_format, timezone
+                    ),
+                    "rep_end": time_from_timestamp(
+                        current_ts, report_time_format, timezone
+                    ),
                     "sub_account": subaccount["name"],
                 },
             }
@@ -424,7 +439,7 @@ def main() -> None:
             subaccount_message_details,
             last_ts,
             current_ts,
-            auth,
+            master_auth,
         ):
             continue
 
