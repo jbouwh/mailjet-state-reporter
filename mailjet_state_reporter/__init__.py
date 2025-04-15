@@ -178,6 +178,7 @@ def send_report(
     subaccount_time_format = subaccount["profile_details"].get(
         "time_format", report_time_format
     )
+    subject_date_format = global_settings.get("time_format", "%Y-%m-%d")
 
     profile_details = subaccount["profile_details"]
     delivery_stats_html = (
@@ -185,6 +186,13 @@ def send_report(
         if not message_stats
         else gen_message_stats_html(config, message_stats)
     )
+    subject_date = (
+        datetime.fromtimestamp(current_ts)
+        .astimezone(ZoneInfo(timezone))
+        .strftime(subject_date_format)
+    )
+    subject_template: str = profile_details["subject"]
+    subject = subject_template.format(subaccount["name"], subject_date)
     message_body = {
         "Messages": [
             {
@@ -198,7 +206,7 @@ def send_report(
                 ],
                 "TemplateID": profile_details["template_id"],
                 "TemplateLanguage": True,
-                "Subject": profile_details["subject"],
+                "Subject": subject,
                 "Variables": {
                     "delivery_stats": delivery_stats_html,
                     "bounce_data": gen_bounce_data_html(

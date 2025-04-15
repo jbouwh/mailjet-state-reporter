@@ -47,13 +47,14 @@ global_settings:
   default_max_report_days: 60 # The maximum number of days to report (first time only)
   timezone: "Europe/Amsterdam"
   time_format: "%Y-%m-%d %H:%M"
+  date_format: "%d-%m-%Y"
 
 profiles:
   relay:
     template_id: 1234567 # The mailjet template to send the status report with
     from_email: "noreply-bounce-service@example.com"
     from_name: "Example Bounce Service"
-    subject: "Example Bounce Repport"
+    subject: "Example Bounce Report {} - {}" # The subject will be formatted with subaccount name and report date
     report_days: "12345" # 1=monday, 2=tuesday, 3=wednesday, 4=thursday, 5=friday, 6=saturday, 7=sunday
     time_format: "%m-%d %H:%M"
     report_in_detail:
