@@ -35,6 +35,7 @@ status_translations:
   opened: "Opened"
   clicked: "Clicked"
   blocked: "Blocked"
+  deferred: "Deferred"
   no_data: "No data for period"
   date_time: "Date/time"
   contact: "To"
@@ -54,6 +55,7 @@ profiles:
     from_name: "Example Bounce Service"
     subject: "Example Bounce Repport"
     report_days: "12345" # 1=monday, 2=tuesday, 3=wednesday, 4=thursday, 5=friday, 6=saturday, 7=sunday
+    time_format: "%m-%d %H:%M"
     report_in_detail:
       - "blocked"
       - "softbounced"
