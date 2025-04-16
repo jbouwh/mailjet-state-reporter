@@ -89,3 +89,23 @@ The template can use the following variables:
 - `sub_account`: Field for the name of the subaccount.
 - `delivery_stats`: Field to hold the statistics (HTML).
 - `bounce_data`: Field to hold the bounce data (HTML). This will include details on the states defined in the `report_in_detail` profile setting.
+
+## Using the docker image
+
+The docker image is available at Docker Hub as `jbouwh/mailjet-state-reporter`
+
+if `~/config` is the local work folder, the following example script shouw how to run the script using the docker image:
+
+```bash
+#! /bin/bash
+docker run --rm \
+-e MAILJET_APP_ID='xxxxxxxxx' \
+-e MAILJET_APP_SECRET='xxxxxxxxx' \
+-e CONFIG_FILE='/config/settings.yaml' \
+-e SYNC_STATE='/config/sync_state.json' \
+--mount type=bind,src=~/config,dst=/config \
+jbouwh/mailjet-state-reporter:latest
+```
+
+> `~/config/settings.yaml`: is the configuration file
+> `~/config/sync_state.json`: is generated bt the script and should be outside the container and persistant, as it stores the last processed timestamp here.
