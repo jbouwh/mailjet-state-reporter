@@ -33,10 +33,6 @@ jobs:
         uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
         with:
           images: jbouwh/mailjet-state-reporter
-          tags: |
-            type=release
-            version=${{ github.event.release.tag_name }}
-            latest
 
       - name: Build and push Docker image
         id: push
