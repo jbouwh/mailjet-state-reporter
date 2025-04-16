@@ -50,3 +50,5 @@ jobs:
           subject-name: index.docker.io/my-docker-hub-namespace/my-docker-hub-repository
           subject-digest: ${{ steps.push.outputs.digest }}
           push-to-registry: true
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
