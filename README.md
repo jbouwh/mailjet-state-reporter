@@ -64,6 +64,8 @@ profiles:
       - "unsub"
       - "spam"
       - "queued"
+    skip_if_no_details: false # Default=false
+    skip_if_no_data: true # Default=false
 
 subaccount_reports:
   - name: "SUBACCOUNT TEST" # Name of the Mailjet subaccount
@@ -71,6 +73,8 @@ subaccount_reports:
     recipients:
       - to_email: "john.doe@example.com" # Email address to send the report to
         to_name: "John Doe" # Name to send the report to
+    skip_if_no_details: true # Default derived from profile setting
+    skip_if_no_data: true # Default derived from profile setting
 ```
 
 ## Running the script
