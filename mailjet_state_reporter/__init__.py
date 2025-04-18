@@ -173,6 +173,21 @@ def send_report(
     global_settings: dict[str, Any] = config.get("global_settings", {})
     status_translations: dict[str, Any] = config.get("status_translations", {})
 
+    skip_if_no_details = subaccount.get(
+        "skip_if_no_details",
+        subaccount["profile_details"].get("skip_if_no_details", False),
+    )
+    skip_if_no_data = subaccount.get(
+        "skip_if_no_data", subaccount["profile_details"].get("skip_if_no_data", False)
+    )
+    if (
+        skip_if_no_details
+        and not message_details
+        or skip_if_no_data
+        and not message_stats
+    ):
+        return False
+
     timezone = global_settings.get("timezone", "Europe/Amsterdam")
     report_time_format = global_settings.get("time_format", "%Y-%m-%d %H:%M:%S")
     subaccount_time_format = subaccount["profile_details"].get(
