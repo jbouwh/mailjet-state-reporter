@@ -64,8 +64,8 @@ profiles:
       - "unsub"
       - "spam"
       - "queued"
-    skip_if_no_details: false # Default=False
-    skip_if_no_data: true # Default=False
+    skip_if_no_details: false # Default=false
+    skip_if_no_data: true # Default=false
 
 subaccount_reports:
   - name: "SUBACCOUNT TEST" # Name of the Mailjet subaccount
