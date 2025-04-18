@@ -180,11 +180,8 @@ def send_report(
     skip_if_no_data = subaccount.get(
         "skip_if_no_data", subaccount["profile_details"].get("skip_if_no_data", False)
     )
-    if (
-        skip_if_no_details
-        and not message_details
-        or skip_if_no_data
-        and not message_stats
+    if (skip_if_no_details and not message_details) or (
+        skip_if_no_data and not message_stats
     ):
         return False
 
