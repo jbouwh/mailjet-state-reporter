@@ -55,7 +55,6 @@ profiles:
     from_email: "noreply-bounce-service@example.com"
     from_name: "Example Bounce Service"
     subject: "Example Bounce Report {} - {}" # The subject will be formatted with subaccount name and report date
-    report_days: "12345" # 1=monday, 2=tuesday, 3=wednesday, 4=thursday, 5=friday, 6=saturday, 7=sunday
     time_format: "%m-%d %H:%M"
     report_in_detail:
       - "blocked"
@@ -70,6 +69,7 @@ profiles:
 subaccount_reports:
   - name: "SUBACCOUNT TEST" # Name of the Mailjet subaccount
     profile: "relay" # Valid defined profile key
+    report_days: "12345" # 1=monday, 2=tuesday, 3=wednesday, 4=thursday, 5=friday, 6=saturday, 7=sunday
     recipients:
       - to_email: "john.doe@example.com" # Email address to send the report to
         to_name: "John Doe" # Name to send the report to
