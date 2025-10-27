@@ -3,7 +3,7 @@
 import logging
 import os
 import sys
-from time import time
+from time import sleep, time
 
 from typing import Any
 
@@ -29,6 +29,10 @@ MAILJET_MAIL_SEND_API = f"{MAILJET_BASE_URL}/v3.1/send"
 
 BATCH_LIMIT = 200
 
+DEFAULT_API_TIMEOUT = 30
+DEFAULT_RETRIES = 3
+DEFAULT_BACKOFF = 10
+
 MESSAGE_FIELDS = {
     "ID": "id",
     "ArrivedAt": "date_time",
@@ -52,7 +56,9 @@ def get_mailjet_data_list(
         params = {}
     query_params = {"countOnly": 1} | params
     try:
-        response = requests.get(api, auth=auth, params=query_params, timeout=10)
+        response = requests.get(
+            api, auth=auth, params=query_params, timeout=DEFAULT_API_TIMEOUT
+        )
         count = json.loads(response.content)["Count"]
     except (
         KeyError,
@@ -66,11 +72,21 @@ def get_mailjet_data_list(
     data = []
     while True:
         query_params = {"Limit": BATCH_LIMIT, "Offset": offset} | params
-        response = requests.get(api, auth=auth, params=query_params, timeout=10)
-        batch = json.loads(response.content)
-        batch_count = batch["Count"]
-        data.extend(batch["Data"])
-        offset += batch_count
+        try:
+            response = requests.get(
+                api, auth=auth, params=query_params, timeout=DEFAULT_API_TIMEOUT
+            )
+            batch = json.loads(response.content)
+            batch_count = batch["Count"]
+            data.extend(batch["Data"])
+            offset += batch_count
+        except (
+            KeyError,
+            json.JSONDecodeError,
+            requests.exceptions.RequestException,
+        ) as err:
+            _LOGGER.error("Error fetching count from API %s: %s", api, err)
+            return None
         if not batch_count or offset >= count:
             break
     return data
@@ -242,7 +258,7 @@ def send_report(
             data=json.dumps(message_body),
             auth=auth,
             headers=headers,
-            timeout=10,
+            timeout=DEFAULT_API_TIMEOUT,
         )
         if response.status_code != 200:
             _LOGGER.error(
@@ -388,7 +404,17 @@ def main() -> None:
 
     # Get API keys and check subaccount validity
     master_auth = HTTPBasicAuth(MAILJET_APP_ID, MAILJET_APP_SECRET)
-    if (subaccount_data := get_subaccount_data(auth=master_auth)) is None:
+    for attempt in range(DEFAULT_RETRIES):
+        if (subaccount_data := get_subaccount_data(auth=master_auth)) is not None:
+            break
+        _LOGGER.debug(
+            "Fetching subaccounts failed, retry (%s) after %s seconds",
+            attempt + 1,
+            DEFAULT_BACKOFF,
+        )
+        sleep(DEFAULT_BACKOFF)
+
+    if subaccount_data is None:
         _LOGGER.error("Error fetching subaccounts, aborting")
         sys.exit(1)
 
@@ -419,18 +445,30 @@ def main() -> None:
             profiles[subaccount["profile"]].get("report_in_detail", [])
         )
 
-        if (
-            subaccount_message_data := get_mailjet_data_list(
-                MAILJET_MESSAGE_API,
-                auth=auth,
-                params={
-                    "FromTS": last_ts,
-                    "ToTS": current_ts,
-                    "ShowSubject": True,
-                    "ShowContactAlt": True,
-                },
+        for attempt in range(DEFAULT_RETRIES):
+            if (
+                subaccount_message_data := get_mailjet_data_list(
+                    MAILJET_MESSAGE_API,
+                    auth=auth,
+                    params={
+                        "FromTS": last_ts,
+                        "ToTS": current_ts,
+                        "ShowSubject": True,
+                        "ShowContactAlt": True,
+                    },
+                )
+            ) is not None:
+                break
+
+            _LOGGER.debug(
+                "Fetching data for subaccount %s data failed, retry (%s) after %s seconds",
+                subaccount["name"],
+                attempt + 1,
+                DEFAULT_BACKOFF,
             )
-        ) is None:
+            sleep(DEFAULT_BACKOFF)
+
+        if subaccount_message_data is None:
             _LOGGER.error(
                 "Error fetching message data for subaccount %s, skipping",
                 subaccount["name"],
@@ -452,15 +490,29 @@ def main() -> None:
             )
 
         # Send report
-        if not send_report(
-            config,
-            subaccount,
-            subaccount_message_stats,
-            subaccount_message_details,
-            last_ts,
-            current_ts,
-            master_auth,
-        ):
+        for attempt in range(DEFAULT_RETRIES):
+            if send_report_status := send_report(
+                config,
+                subaccount,
+                subaccount_message_stats,
+                subaccount_message_details,
+                last_ts,
+                current_ts,
+                master_auth,
+            ):
+                break
+            _LOGGER.debug(
+                "Failed to send report for subaccount %s, retry (%s) after %s seconds",
+                subaccount["name"],
+                attempt + 1,
+                DEFAULT_BACKOFF,
+            )
+            sleep(DEFAULT_BACKOFF)
+
+        if not send_report_status:
+            _LOGGER.error(
+                "Failed to send report for subaccount %s, skipping", subaccount["name"]
+            )
             continue
 
         # update state to current timestamp
