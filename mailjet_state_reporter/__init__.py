@@ -65,7 +65,7 @@ def get_mailjet_data_list(
         json.JSONDecodeError,
         requests.exceptions.RequestException,
     ) as err:
-        _LOGGER.error("Error fetching count from API %s: %s", api, err)
+        _LOGGER.debug("Error fetching count from API %s: %s", api, err)
         return None
 
     offset = 0
@@ -85,7 +85,7 @@ def get_mailjet_data_list(
             json.JSONDecodeError,
             requests.exceptions.RequestException,
         ) as err:
-            _LOGGER.error("Error fetching count from API %s: %s", api, err)
+            _LOGGER.warning("Error fetching count from API %s: %s", api, err)
             return None
         if not batch_count or offset >= count:
             break
@@ -97,7 +97,7 @@ def get_subaccount_data(auth: HTTPBasicAuth) -> dict[str, dict[str, str]] | None
     if (
         subaccount_api_data := get_mailjet_data_list(MAILJET_APIKEY_API, auth=auth)
     ) is None:
-        _LOGGER.error("Error fetching subaccount data")
+        _LOGGER.debug("Error fetching subaccount data")
         return None
     return {
         subaccount["Name"]: {
@@ -261,14 +261,14 @@ def send_report(
             timeout=DEFAULT_API_TIMEOUT,
         )
         if response.status_code != 200:
-            _LOGGER.error(
+            _LOGGER.warning(
                 "Error sending report for subaccount %s: %s",
                 subaccount["name"],
                 response.status_code,
             )
             return False
     except (requests.exceptions.RequestException,) as err:
-        _LOGGER.error(
+        _LOGGER.warning(
             "Error fetching count from API %s: %s", MAILJET_MAIL_SEND_API, err
         )
         return False
@@ -349,7 +349,7 @@ def main() -> None:
 
     subaccount_reports: list[dict[str, Any]] = config.get("subaccount_reports", [])
     if not subaccount_reports:
-        _LOGGER.info("No subaccount reports found in config file, nothing to report")
+        _LOGGER.warning("No subaccount reports found in config file, nothing to report")
         sys.exit(1)
 
     # Validate subaccount config
