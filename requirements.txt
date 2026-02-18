@@ -1,10 +1,10 @@
-setuptools==68.0.0
-wheel~=0.40.0
-requests==2.31.0
+setuptools==82.0.0
+wheel~=0.46.3
+requests==26.0.1
 
 codespell==2.4.1
-ruff==0.11.0
-yamllint==1.35.1
+ruff==0.15.1
+yamllint==1.38.0
 
-types-requests==2.32.0.20250328
-types-PyYAML==6.0.12.20250402
+types-requests==2.32.4.20260107
+types-PyYAML==6.0.12.20250915
