@@ -9,9 +9,9 @@ RUN apk upgrade \
       nano less libxml2 python3-dev libxslt-dev libxml2-dev bash openssl-dev libffi-dev \
     && ln -sf /usr/share/zoneinfo/$TZ /etc/localtime \
     && update-ca-certificates \
-    && addgroup -S appgroup && adduser -S leanpython -G appgroup \
+    && addgroup -S appgroup && adduser -S pythonrt -G appgroup \
     && mkdir -p /app \
-    && chown -R leanpython:appgroup /app
+    && chown -R pythonrt:appgroup /app
 
 USER pythonrt
 
