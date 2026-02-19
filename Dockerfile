@@ -13,17 +13,17 @@ RUN apk upgrade \
     && mkdir -p /app \
     && chown -R leanpython:appgroup /app
 
-USER python_runtime
-WORKDIR /usr/src
+USER pythonrt
 
 # Install uv and create venv
 RUN curl -LsSf https://astral.sh/uv/install.sh | sh \
-    && /home/python_runtime/.local/bin/uv venv
+    && /home/pythonrt/.local/bin/uv venv
 
-ENV VIRTUAL_ENV=/home/python_runtime/.venv
-ENV PATH="/home/python_runtime/.local/bin:/home/python_runtime/.venv/bin:$PATH"
+ENV VIRTUAL_ENV=/home/pythonrt/.venv
+ENV PATH="/home/pythonrt/.local/bin:/home/pythonrt/.venv/bin:$PATH"
 
 RUN uv --version
+WORKDIR /usr/src
 
 COPY mailjet_state_reporter/__init__.py ./mailjet-state-reporter.py
 
