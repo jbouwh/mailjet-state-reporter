@@ -18,7 +18,7 @@ WORKDIR /usr/src
 
 # Install uv and create venv
 RUN curl -LsSf https://astral.sh/uv/install.sh | sh \
-    && /home/leanpython/.local/bin/uv venv
+    && /home/python_runtime/.local/bin/uv venv
 
 ENV VIRTUAL_ENV=/home/python_runtime/.venv
 ENV PATH="/home/python_runtime/.local/bin:/home/python_runtime/.venv/bin:$PATH"
