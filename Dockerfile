@@ -5,7 +5,7 @@ ENV TZ=Europe/Amsterdam
 # Install system dependencies and create non-root user
 RUN apk upgrade \
     && apk add --update \
-      ca-certificates tzdata curl tar build-base libpcap tcpdump python3 wget py3-pip git \
+      ca-certificates tzdata curl tar build-base libpcap tcpdump python3 wget py3-pip py3-requests py3-yaml git \
       nano less libxml2 python3-dev libxslt-dev libxml2-dev bash openssl-dev libffi-dev \
     && ln -sf /usr/share/zoneinfo/$TZ /etc/localtime \
     && update-ca-certificates \
