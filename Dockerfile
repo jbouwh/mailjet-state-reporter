@@ -14,15 +14,6 @@ RUN apk upgrade \
     && chown -R pythonrt:appgroup /app
 
 USER pythonrt
-
-# Install uv and create venv
-RUN curl -LsSf https://astral.sh/uv/install.sh | sh \
-    && /home/pythonrt/.local/bin/uv venv
-
-ENV VIRTUAL_ENV=/home/pythonrt/.venv
-ENV PATH="/home/pythonrt/.local/bin:/home/pythonrt/.venv/bin:$PATH"
-
-RUN uv --version
 WORKDIR /usr/src
 
 COPY mailjet_state_reporter/__init__.py ./mailjet-state-reporter.py
