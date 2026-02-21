@@ -10,11 +10,11 @@ RUN apk upgrade \
     && ln -sf /usr/share/zoneinfo/$TZ /etc/localtime \
     && update-ca-certificates \
     && addgroup -S appgroup && adduser -S pythonrt -G appgroup \
-    && mkdir -p /app \
-    && chown -R pythonrt:appgroup /app
+    && mkdir -p /config \
+    && chown -R pythonrt:appgroup /config
 
 USER pythonrt
-WORKDIR /usr/src
+WORKDIR /config
 
 COPY mailjet_state_reporter/__init__.py ./mailjet-state-reporter.py
 
