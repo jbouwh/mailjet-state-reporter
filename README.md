@@ -111,4 +111,4 @@ docker run --rm \
 jbouwh/mailjet-state-reporter:latest
 ```
 
-> `~/config/settings.yaml`: is the configuration file; `~/config/sync_state.json`: is generated bt the script and should be outside the container and persistant, as it stores the last processed timestamp here.
+> The `CONFIG_FILE` `~/config/settings.yaml` is the configuration file; The `SYNC_STATE` file `~/config/sync_state.json` is generated bt the script and should be outside the container and persistent, as it stores the last processed timestamp here. The `~/config/sync_state.json`. The user (``pythonrt`) in the docker container has UID 2001, so make sure to assign the correct access rights.
