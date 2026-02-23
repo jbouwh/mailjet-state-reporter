@@ -9,7 +9,7 @@ RUN apk upgrade \
       nano less libxml2 python3-dev libxslt-dev libxml2-dev bash openssl-dev libffi-dev \
     && ln -sf /usr/share/zoneinfo/$TZ /etc/localtime \
     && update-ca-certificates \
-    && addgroup -S appgroup && adduser -S pythonrt -G appgroup \
+    && addgroup -S appgroup && adduser -S pythonrt -G appgroup -u 2001 \
     && mkdir -p /config \
     && chown -R pythonrt:appgroup /config
 
