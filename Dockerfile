@@ -11,13 +11,15 @@ RUN apk upgrade \
     && update-ca-certificates \
     && addgroup -S appgroup && adduser -S pythonrt -G appgroup -u 2001 \
     && mkdir -p /config \
-    && chown -R pythonrt:appgroup /config
+    && chown -R pythonrt:appgroup /config \
+    && mkdir -p /usr/src \
+    && chown -R pythonrt:appgroup /usr/src
 
 USER pythonrt
 WORKDIR /config
 
-COPY mailjet_state_reporter/__init__.py ./mailjet-state-reporter.py
+COPY mailjet_state_reporter/__init__.py /usr/src/mailjet-state-reporter.py
 
 ENTRYPOINT ["python"]
 
-CMD ["mailjet-state-reporter.py"]
+CMD ["/usr/src/mailjet-state-reporter.py"]
