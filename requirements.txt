@@ -1,6 +1,6 @@
 setuptools==82.0.0
 wheel~=0.46.3
-requests==26.0.1
+requests==2.33.1
 
 codespell==2.4.1
 ruff==0.15.1
