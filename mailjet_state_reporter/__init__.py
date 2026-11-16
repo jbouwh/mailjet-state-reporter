@@ -1,19 +1,17 @@
 """Mailjet mail status reporter."""
 
+import json
 import logging
 import os
 import sys
-from time import sleep, time
-
-from typing import Any
-
 from datetime import datetime
-import json
+from time import sleep, time
+from typing import Any
 from zoneinfo import ZoneInfo
-import requests
-from requests.auth import HTTPBasicAuth
-import yaml
 
+import requests
+import yaml
+from requests.auth import HTTPBasicAuth
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -269,7 +267,7 @@ def send_report(
                 response.status_code,
             )
             return False
-    except (requests.exceptions.RequestException,) as err:
+    except requests.exceptions.RequestException as err:
         _LOGGER.warning(
             "Error fetching count from API %s: %s", MAILJET_MAIL_SEND_API, err
         )
@@ -280,7 +278,6 @@ def send_report(
 
 def main() -> None:
     """Main function to run the script."""
-    day_of_week = str(datetime.now().isoweekday())
     config: dict[str, Any] | None
 
     if MAILJET_APP_ID is None or MAILJET_APP_SECRET is None:
@@ -304,6 +301,9 @@ def main() -> None:
     global_settings: dict[str, Any] = config.get("global_settings", {})
     report_days_default: str = global_settings.get("report_days", "01234")
     default_max_report_days: int = global_settings.get("default_max_report_days", 1)
+    # Determine the day of the week in the configured timezone
+    timezone: str = global_settings.get("timezone", "Europe/Amsterdam")
+    day_of_week = str(datetime.now(ZoneInfo(timezone)).isoweekday())
 
     state: dict[str, int]
     try:
