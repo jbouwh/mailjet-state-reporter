@@ -70,7 +70,7 @@ How the parts fit together:
 - **CI**: the pipeline clones the chart at `REPORTER_REF`, runs `helm lint --strict` and `helm template` with `values.yaml`, renders `k8s/` with Kustomize and validates everything with `kubeconform` (including the Vault CRDs). Make the pipeline required ("Pipelines must succeed" and a protected default branch), because ArgoCD syncs the default branch.
 - **NOTES**: ArgoCD renders the chart with `helm template`, so the install notes are not shown. Start a manual run with `kubectl -n mailjet-reporter create job --from=cronjob/mailjet-state-reporter manual-run`.
 
-The chart is available from the first release that contains `charts/mailjet-state-reporter`; the example uses `v0.3.11` as a placeholder for that release.
+The chart is available from release `v0.3.11`, which is also the version used in the example.
 
 ## Releasing
 
