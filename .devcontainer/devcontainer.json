@@ -1,16 +1,13 @@
 // For format details, see https://aka.ms/devcontainer.json. For config options, see the README at:
-// https://github.com/microsoft/vscode-dev-containers/tree/v0.177.0/containers/python-3
+// https://github.com/devcontainers/images/tree/main/src/python
 {
   "name": "mailjet-state-reporter",
   "build": {
     "dockerfile": "Dockerfile",
     "context": "..",
     "args": {
-      // Update 'VARIANT' to pick a Python version: 3, 3.6, 3.7, 3.8, 3.9
-      "VARIANT": "3.14",
-      // Options
-      "INSTALL_NODE": "false",
-      "NODE_VERSION": "lts/*"
+      // Image variant: <python version>
+      "VARIANT": "3.14"
     }
   },
 
@@ -19,22 +16,18 @@
     "vscode": {
       "extensions": [
         "charliermarsh.ruff",
-        "ms-python.pylint",
+        "ms-python.python",
         "ms-python.vscode-pylance",
-        "visualstudioexptteam.vscodeintellicode",
+        "ms-python.mypy-type-checker",
         "redhat.vscode-yaml",
         "esbenp.prettier-vscode",
         "GitHub.vscode-pull-request-github",
         "GitHub.copilot"
       ],
-      // Please keep this file in sync with settings in home-assistant/.vscode/settings.default.json
       "settings": {
-        "python.experiments.optOutFrom": ["pythonTestAdapter"],
         "python.defaultInterpreterPath": "/usr/local/bin/python",
-        "python.pythonPath": "/usr/local/bin/python",
         "python.terminal.activateEnvInCurrentTerminal": true,
-        "python.testing.pytestArgs": ["--no-cov"],
-        "pylint.importStrategy": "fromEnvironment",
+        "mypy-type-checker.importStrategy": "fromEnvironment",
         "editor.formatOnPaste": false,
         "editor.formatOnSave": true,
         "editor.formatOnType": true,
@@ -45,14 +38,6 @@
           }
         },
         "terminal.integrated.defaultProfile.linux": "zsh",
-        "yaml.customTags": [
-          "!input scalar",
-          "!secret scalar",
-          "!include_dir_named scalar",
-          "!include_dir_list scalar",
-          "!include_dir_merge_list scalar",
-          "!include_dir_merge_named scalar"
-        ],
         "[python]": {
           "editor.defaultFormatter": "charliermarsh.ruff"
         }
@@ -63,14 +48,18 @@
   // Use 'forwardPorts' to make a list of ports inside the container available locally.
   "forwardPorts": [],
 
-  // Use 'postCreateCommand' to run commands after the container is created.
-  "postCreateCommand": "pip3 install --user -r requirements.txt",
+  // Install the pinned dev tools (ruff, mypy, codespell, yamllint, ...) after the container is created.
+  // The workspace is bind mounted with a different owner, so mark it as safe for git.
+  "postCreateCommand": "git config --global --add safe.directory ${containerWorkspaceFolder} && pip3 install --user -r requirements.txt",
 
   // Comment out connect as root instead. More info: https://aka.ms/vscode-remote/containers/non-root.
   "remoteUser": "vscode",
 
   // Advertize container environment
   "containerEnv": { "DEVCONTAINER": "1" },
+
+  // Make the tools installed with 'pip3 install --user' available
+  "remoteEnv": { "PATH": "${containerEnv:PATH}:/home/vscode/.local/bin" },
 
   // Setup environment
   "runArgs": ["--env-file", "${localWorkspaceFolder}/.devcontainer/devcontainer.env"]

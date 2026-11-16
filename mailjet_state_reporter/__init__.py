@@ -21,6 +21,8 @@ MAILJET_APP_ID = os.environ.get("MAILJET_APP_ID")
 MAILJET_APP_SECRET = os.environ.get("MAILJET_APP_SECRET")
 CONFIG_FILE = os.environ.get("CONFIG_FILE")
 SYNC_STATE = os.environ.get("SYNC_STATE")
+# Optional log file path. When unset or empty, logging goes to stdout only.
+LOG_FILE = os.environ.get("LOG_FILE")
 
 MAILJET_BASE_URL = "https://api.mailjet.com"
 MAILJET_MESSAGE_API = f"{MAILJET_BASE_URL}/v3/REST/message"
@@ -527,12 +529,18 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    # DEBUG and INFO go to stdout, WARNING and higher go to stderr
+    stdout_handler = logging.StreamHandler(sys.stdout)
+    stdout_handler.addFilter(lambda record: record.levelno < logging.WARNING)
+    stderr_handler = logging.StreamHandler(sys.stderr)
+    stderr_handler.setLevel(logging.WARNING)
+    log_handlers: list[logging.Handler] = [stdout_handler, stderr_handler]
+    # The optional log file receives all log lines
+    if LOG_FILE:
+        log_handlers.append(logging.FileHandler(LOG_FILE, encoding="utf-8"))
     logging.basicConfig(
         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
         level=logging.INFO,
-        handlers=[
-            logging.StreamHandler(sys.stdout),
-            logging.FileHandler("mailjet_state_reporter.log"),
-        ],
+        handlers=log_handlers,
     )
     main()

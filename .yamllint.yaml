@@ -1,0 +1,13 @@
+---
+# yamllint configuration for this repository and for settings.yaml files.
+extends: default
+
+rules:
+  line-length:
+    max: 120
+  # GitHub Actions uses the `on:` key, which yamllint would flag as a truthy value
+  truthy:
+    check-keys: false
+  comments:
+    min-spaces-from-content: 1
+  document-start: disable
