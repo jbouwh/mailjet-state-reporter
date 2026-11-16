@@ -1,0 +1,110 @@
+# Default values for mailjet-state-reporter.
+
+image:
+  repository: jbouwh/mailjet-state-reporter
+  # Defaults to the chart appVersion
+  tag: ""
+  # Optional image digest, e.g. "sha256:...". When set, it is appended to the tag.
+  digest: ""
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+# CronJob schedule. The script itself decides with `report_days` in settings.yaml
+# whether a report is sent on that day.
+schedule: "0 6 * * *"
+timeZone: "Europe/Amsterdam"
+suspend: false
+# The state is only saved at the end of a run, so never run jobs concurrently
+# and never retry a failed job (that could send reports twice).
+concurrencyPolicy: Forbid
+startingDeadlineSeconds: 3600
+successfulJobsHistoryLimit: 3
+failedJobsHistoryLimit: 5
+backoffLimit: 0
+activeDeadlineSeconds: 1800
+# Optional: remove finished jobs after this number of seconds
+ttlSecondsAfterFinished: null
+
+# settings.yaml, mounted read-only at /config/settings.yaml from a ConfigMap.
+settings:
+  # Name of an existing ConfigMap that holds the settings file. When set,
+  # no ConfigMap is created by this chart.
+  existingConfigMap: ""
+  # Key in the ConfigMap that holds the settings file
+  key: settings.yaml
+  # Content of settings.yaml. Set it from a file with:
+  #   helm install ... --set-file settings.content=config/settings.yaml
+  content: ""
+
+# Mailjet master API credentials (MAILJET_APP_ID / MAILJET_APP_SECRET).
+credentials:
+  # Name of an existing Secret, e.g. synchronized from HashiCorp Vault.
+  # It must contain the keys below. Preferred over `create`.
+  existingSecret: ""
+  appIdKey: MAILJET_APP_ID
+  appSecretKey: MAILJET_APP_SECRET
+  # Let the chart create the Secret (avoid storing real credentials in values files)
+  create: false
+  appId: ""
+  appSecret: ""
+
+# Persistent volume for sync_state.json, mounted at /state.
+persistence:
+  # Use an existing PersistentVolumeClaim instead of creating one
+  existingClaim: ""
+  storageClass: ""
+  accessModes:
+    - ReadWriteOnce
+  size: 100Mi
+  # Keep the PVC (and the state) on `helm uninstall`
+  keep: true
+  annotations: {}
+  # For ArgoCD, prevent pruning/deleting the state:
+  #   argocd.argoproj.io/sync-options: Prune=false,Delete=false
+
+# Optional log file path. Empty logs to the console only (INFO to stdout,
+# WARNING/ERROR to stderr). When set, an emptyDir is mounted on its directory.
+logFile: ""
+logVolume:
+  sizeLimit: 50Mi
+
+# Extra environment variables for the container
+extraEnv: []
+
+serviceAccount:
+  create: true
+  name: ""
+  annotations: {}
+  automountServiceAccountToken: false
+
+podAnnotations: {}
+podLabels: {}
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 2001
+  runAsGroup: 2001
+  fsGroup: 2001
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop:
+      - ALL
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    memory: 256Mi
+
+nodeSelector: {}
+tolerations: []
+affinity: {}

@@ -1,0 +1,9 @@
+settings:
+  content: |
+    global_settings:
+      report_days: "12345"
+      timezone: "Europe/Amsterdam"
+    profiles: {}
+    subaccount_reports: []
+credentials:
+  existingSecret: mailjet-credentials

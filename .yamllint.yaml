@@ -11,3 +11,7 @@ rules:
   comments:
     min-spaces-from-content: 1
   document-start: disable
+
+# Helm templates are Go templates, not plain YAML
+ignore: |
+  charts/*/templates/

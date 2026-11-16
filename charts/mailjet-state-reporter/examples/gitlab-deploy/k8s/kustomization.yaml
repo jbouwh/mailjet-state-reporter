@@ -1,0 +1,19 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: mailjet-reporter
+
+resources:
+  - namespace.yaml
+  - vault-auth.yaml
+  - vault-static-secret.yaml
+
+configMapGenerator:
+  - name: mailjet-reporter-settings
+    files:
+      - settings.yaml
+
+generatorOptions:
+  # The chart refers to the ConfigMap by name (settings.existingConfigMap).
+  # Every job starts a new pod, so the next run always reads the current settings.
+  disableNameSuffixHash: true

@@ -1,0 +1,13 @@
+apiVersion: v2
+name: mailjet-state-reporter
+description: Daily Mailjet delivery and bounce report as a Kubernetes CronJob
+type: application
+version: 0.1.0
+appVersion: "v0.3.11"
+home: https://github.com/jbouwh/mailjet-state-reporter
+sources:
+  - https://github.com/jbouwh/mailjet-state-reporter
+keywords:
+  - mailjet
+  - cronjob
+  - reporting

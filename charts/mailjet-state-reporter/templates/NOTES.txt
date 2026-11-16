@@ -1,0 +1,11 @@
+The CronJob {{ include "mailjet-state-reporter.fullname" . }} runs on "{{ .Values.schedule }}"{{ with .Values.timeZone }} ({{ . }}){{ end }}.
+
+  settings.yaml : ConfigMap {{ include "mailjet-state-reporter.configMapName" . }} (read-only at /config)
+  state         : PVC {{ include "mailjet-state-reporter.claimName" . }} (/state/sync_state.json)
+  credentials   : Secret {{ include "mailjet-state-reporter.secretName" . }}
+
+Start a manual run:
+  kubectl -n {{ .Release.Namespace }} create job --from=cronjob/{{ include "mailjet-state-reporter.fullname" . }} {{ include "mailjet-state-reporter.fullname" . | trunc 40 | trimSuffix "-" }}-manual
+
+Show the logs (WARNING/ERROR lines are written to stderr):
+  kubectl -n {{ .Release.Namespace }} logs job/{{ include "mailjet-state-reporter.fullname" . | trunc 40 | trimSuffix "-" }}-manual
