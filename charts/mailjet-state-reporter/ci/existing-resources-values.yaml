@@ -1,5 +1,5 @@
 image:
-  digest: "sha256:5e191f74789135df950d93219b0ac66014fe1a85327e88401229841a240b8b22"
+  digest: "sha256:0fe161dd79bf6d6e03719ac6516ed0c3e2df4b67b300d77cf08203a7e313c51a"
 settings:
   existingConfigMap: mailjet-reporter-settings
 credentials:
