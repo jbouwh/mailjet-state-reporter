@@ -10,8 +10,8 @@ spec:
     server: https://kubernetes.default.svc
     namespace: mailjet-reporter
   sources:
-    # 1. The Helm chart from the app repository, pinned to a release tag
-    - repoURL: https://github.com/jbouwh/mailjet-state-reporter.git
+    # 1. The Helm chart from the GitLab mirror of the app repository, pinned to a release tag
+    - repoURL: https://gitlab.example.com/example-group/mailjet-state-reporter.git
       targetRevision: v0.3.11
       path: charts/mailjet-state-reporter
       helm:
