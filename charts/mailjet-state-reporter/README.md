@@ -11,7 +11,7 @@ The chart keeps configuration, state and logs strictly separated:
 | stdout        | `DEBUG`/`INFO` lines    | n/a                                       | n/a        |
 | stderr        | `WARNING`/`ERROR` lines | n/a                                       | n/a        |
 
-The container runs as UID 2001 with a read-only root filesystem. Requires image `v0.3.10` or newer (the chart default).
+The container runs as UID 2001 with a read-only root filesystem. Requires image `v0.3.10` or newer; by default the chart uses its `appVersion` (`v0.3.11`).
 
 ## Install
 
