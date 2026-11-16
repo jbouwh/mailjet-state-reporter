@@ -44,11 +44,12 @@ kubectl -n mailjet-reporter logs job/manual-run
 
 ## Deploying from GitLab with ArgoCD
 
-The chart is designed to be used from a GitLab deploy repository that is synced by ArgoCD. The chart itself stays in this (GitHub) repository and is pinned to a release tag; the GitLab repository only holds the values, `settings.yaml` and, optionally, the Vault resources. A complete, tested example is in [`examples/gitlab-deploy`](examples/gitlab-deploy).
+The chart is designed to be used from a GitLab deploy repository that is synced by ArgoCD. GitHub only hosts the source code: this repository, including the chart, is mirrored to GitLab, and ArgoCD and the GitLab pipeline only use GitLab. The chart is used from the mirror and pinned to a release tag; the GitLab deploy repository only holds the values, `settings.yaml` and, optionally, the Vault resources. A complete, tested example is in [`examples/gitlab-deploy`](examples/gitlab-deploy).
 
 ```
 mailjet-reporter-deploy/             (GitLab)
 ├── .gitlab-ci.yml                   yamllint, helm lint/template, kustomize build, kubeconform
+├── .yamllint.yaml                   yamllint configuration
 ├── values.yaml                      Helm values for this chart
 ├── argocd/
 │   └── application.yaml             ArgoCD Application (registered once, e.g. via app-of-apps)
@@ -64,15 +65,25 @@ mailjet-reporter-deploy/             (GitLab)
 
 How the parts fit together:
 
-- **Chart**: the ArgoCD `Application` uses three sources: the chart from `https://github.com/jbouwh/mailjet-state-reporter.git` at path `charts/mailjet-state-reporter` and a release tag, the GitLab repository as `ref: deploy` for `$deploy/values.yaml`, and the GitLab path `k8s/` for the other resources. Use `releaseName: mailjet-state-reporter`, so the CronJob, ServiceAccount and PVC are named `mailjet-state-reporter` and `mailjet-state-reporter-state`.
+- **Chart**: the ArgoCD `Application` uses three sources: the chart from the GitLab mirror of this repository (e.g. `https://gitlab.example.com/example-group/mailjet-state-reporter.git`) at path `charts/mailjet-state-reporter` and a release tag, the GitLab repository as `ref: deploy` for `$deploy/values.yaml`, and the GitLab path `k8s/` for the other resources. Use `releaseName: mailjet-state-reporter`, so the CronJob, ServiceAccount and PVC are named `mailjet-state-reporter` and `mailjet-state-reporter-state`.
 - **`settings.yaml`**: Kustomize creates the ConfigMap `mailjet-reporter-settings` from `k8s/settings.yaml` with `disableNameSuffixHash: true`, and `values.yaml` points to it with `settings.existingConfigMap`. The name must be stable because the chart refers to it. Every job starts a new pod, so the next run always reads the current settings. Kustomize only loads files inside the kustomization directory, so `settings.yaml` lives in `k8s/`.
 - **Credentials**: the chart reads the Secret `mailjet-credentials` (`credentials.existingSecret`). In the example the optional `vault` component lets the Vault Secrets Operator create it; its `VaultAuth` uses the ServiceAccount `mailjet-state-reporter` that the chart creates. Without Vault, see [Credentials without Vault](#credentials-without-vault).
 - **State**: ArgoCD does not honour `helm.sh/resource-policy: keep`, so set `persistence.annotations` to `argocd.argoproj.io/sync-options: Prune=false,Delete=false`.
 - **Versions**: keep the chart `targetRevision` in the `Application`, `REPORTER_REF` in `.gitlab-ci.yml` and `image.tag`/`image.digest` in `values.yaml` on the same release.
-- **CI**: the pipeline clones the chart at `REPORTER_REF`, runs `helm lint --strict` and `helm template` with `values.yaml`, renders `k8s/` with Kustomize and validates everything with `kubeconform` (including CRDs such as the Vault resources). Make the pipeline required ("Pipelines must succeed" and a protected default branch), because ArgoCD syncs the default branch.
+- **CI**: the pipeline clones the chart from the mirror (`REPORTER_PROJECT`) at `REPORTER_REF` with the CI job token, runs `helm lint --strict` and `helm template` with `values.yaml`, renders `k8s/` with Kustomize and validates everything with `kubeconform` (including CRDs such as the Vault resources). Make the pipeline required ("Pipelines must succeed" and a protected default branch), because ArgoCD syncs the default branch.
 - **NOTES**: ArgoCD renders the chart with `helm template`, so the install notes are not shown. Start a manual run with `kubectl -n mailjet-reporter create job --from=cronjob/mailjet-state-reporter manual-run`.
 
 The chart is available from release `v0.3.11`, which is also the version used in the example.
+
+## Mirroring this repository to GitLab
+
+ArgoCD and the GitLab pipeline do not access GitHub. Set up the mirror once:
+
+- Create a GitLab project, e.g. `example-group/mailjet-state-reporter`, with a **pull mirror** of `https://github.com/jbouwh/mailjet-state-reporter.git`. GitLab mirrors branches and tags, so the release tags (e.g. `v0.3.11`) are available for `targetRevision` and `REPORTER_REF`. Check that a new release tag has been mirrored before you use it.
+- Set `REPORTER_PROJECT` in `.gitlab-ci.yml` to the path of the mirror, and add the deploy project to the job token allowlist of the mirror (*Settings > CI/CD > Job token permissions*), so the pipeline can clone it with `CI_JOB_TOKEN`.
+- Set the chart `repoURL` in `argocd/application.yaml` to the mirror and add repository credentials for the mirror and the deploy project in ArgoCD.
+- The container image still comes from Docker Hub (`jbouwh/mailjet-state-reporter`). Mirror it to an internal registry if the cluster cannot reach Docker Hub, and set `image.repository` accordingly.
+- The CI images (`python`, `alpine/helm`, `kustomize`, `kubeconform`) and the kubeconform schemas (Kubernetes schemas and the CRD catalog) are downloaded from public registries and GitHub. If the runners cannot reach them, use internal mirrors and adjust the image names and `-schema-location` options.
 
 ## Credentials without Vault
 
