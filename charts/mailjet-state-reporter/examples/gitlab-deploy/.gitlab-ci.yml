@@ -1,0 +1,68 @@
+# CI for the GitLab deploy repository. ArgoCD only syncs the default branch,
+# so make these jobs required ("Pipelines must succeed" + protected branch).
+variables:
+  # Release of the app repository: chart version, must match image.tag in values.yaml
+  REPORTER_REF: "v0.3.11"
+  REPORTER_REPO: "https://github.com/jbouwh/mailjet-state-reporter.git"
+  RELEASE_NAME: "mailjet-state-reporter"
+  NAMESPACE: "mailjet-reporter"
+  YAMLLINT_VERSION: "1.38.0"
+
+stages:
+  - validate
+
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+yamllint:
+  stage: validate
+  image: python:3.14-alpine
+  script:
+    - pip install --quiet "yamllint==${YAMLLINT_VERSION}"
+    - >-
+      test -f .yamllint.yaml ||
+      wget -q -O .yamllint.yaml
+      "https://raw.githubusercontent.com/jbouwh/mailjet-state-reporter/${REPORTER_REF}/.yamllint.yaml"
+    - yamllint -c .yamllint.yaml -f colored .
+
+render-chart:
+  stage: validate
+  image:
+    name: alpine/helm:4.3.2
+    entrypoint: [""]
+  script:
+    - git clone --quiet --depth 1 --branch "${REPORTER_REF}" "${REPORTER_REPO}" /tmp/app
+    - helm lint --strict /tmp/app/charts/mailjet-state-reporter -f values.yaml
+    - >-
+      helm template "${RELEASE_NAME}" /tmp/app/charts/mailjet-state-reporter
+      --namespace "${NAMESPACE}" -f values.yaml > chart.yaml
+  artifacts:
+    paths:
+      - chart.yaml
+
+render-kustomize:
+  stage: validate
+  image:
+    name: registry.k8s.io/kustomize/kustomize:v5.4.3
+    entrypoint: [""]
+  script:
+    - kustomize build k8s > kustomize.yaml
+  artifacts:
+    paths:
+      - kustomize.yaml
+
+k8s-manifests:
+  stage: validate
+  needs: [render-chart, render-kustomize]
+  image:
+    name: ghcr.io/yannh/kubeconform:v0.6.7-alpine
+    entrypoint: [""]
+  script:
+    - >-
+      kubeconform -strict -summary
+      -schema-location default
+      -schema-location
+      'https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json'
+      chart.yaml kustomize.yaml

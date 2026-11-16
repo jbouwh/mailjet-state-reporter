@@ -130,3 +130,16 @@ jbouwh/mailjet-state-reporter:latest
 > To also write a log file, mount a writable folder (e.g. `--mount type=bind,src="$HOME/logs",dst=/logs`) and set `-e LOG_FILE=/logs/mailjet_state_reporter.log`. Do not point `LOG_FILE` to `/config` or `/state`.
 >
 > **Upgrade note:** earlier versions always wrote `mailjet_state_reporter.log` to `/config`. This is no longer the case; set `LOG_FILE` if you still need a log file.
+
+## Using the Helm chart
+
+A Helm chart is available in [`charts/mailjet-state-reporter`](charts/mailjet-state-reporter). It runs the reporter as a Kubernetes CronJob (default every day at 06:00 Europe/Amsterdam) and mounts `settings.yaml` read-only from a ConfigMap:
+
+```bash
+helm install mailjet-reporter ./charts/mailjet-state-reporter \
+  --namespace mailjet-reporter --create-namespace \
+  --set-file settings.content=config/settings.yaml \
+  --set credentials.existingSecret=mailjet-credentials
+```
+
+See the [chart README](charts/mailjet-state-reporter/README.md) for all options.

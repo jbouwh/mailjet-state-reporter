@@ -1,0 +1,20 @@
+# Helm values for the mailjet-state-reporter chart, used by the ArgoCD Application.
+image:
+  # Pin the image to the same release as the chart (targetRevision in the Application)
+  tag: "v0.3.10"
+  digest: "sha256:5e191f74789135df950d93219b0ac66014fe1a85327e88401229841a240b8b22"
+
+settings:
+  # Created by k8s/kustomization.yaml from k8s/settings.yaml
+  existingConfigMap: mailjet-reporter-settings
+
+credentials:
+  # Created by k8s/vault-static-secret.yaml (Vault Secrets Operator)
+  existingSecret: mailjet-credentials
+
+persistence:
+  size: 100Mi
+  storageClass: ""
+  annotations:
+    # ArgoCD ignores helm.sh/resource-policy, so protect the state explicitly
+    argocd.argoproj.io/sync-options: Prune=false,Delete=false

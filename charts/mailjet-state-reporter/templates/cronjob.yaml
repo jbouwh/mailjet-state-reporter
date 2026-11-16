@@ -1,0 +1,131 @@
+{{- $logDir := "" }}
+{{- if .Values.logFile }}
+{{- $logDir = dir .Values.logFile }}
+{{- if or (eq $logDir "/config") (hasPrefix "/config/" $logDir) (eq $logDir "/state") (hasPrefix "/state/" $logDir) }}
+{{- fail "logFile must not be located in /config or /state" }}
+{{- end }}
+{{- end }}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "mailjet-state-reporter.fullname" . }}
+  labels:
+    {{- include "mailjet-state-reporter.labels" . | nindent 4 }}
+spec:
+  schedule: {{ .Values.schedule | quote }}
+  {{- with .Values.timeZone }}
+  timeZone: {{ . | quote }}
+  {{- end }}
+  suspend: {{ .Values.suspend }}
+  concurrencyPolicy: {{ .Values.concurrencyPolicy }}
+  {{- with .Values.startingDeadlineSeconds }}
+  startingDeadlineSeconds: {{ . }}
+  {{- end }}
+  successfulJobsHistoryLimit: {{ .Values.successfulJobsHistoryLimit }}
+  failedJobsHistoryLimit: {{ .Values.failedJobsHistoryLimit }}
+  jobTemplate:
+    metadata:
+      labels:
+        {{- include "mailjet-state-reporter.selectorLabels" . | nindent 8 }}
+    spec:
+      backoffLimit: {{ .Values.backoffLimit }}
+      {{- with .Values.activeDeadlineSeconds }}
+      activeDeadlineSeconds: {{ . }}
+      {{- end }}
+      {{- if not (kindIs "invalid" .Values.ttlSecondsAfterFinished) }}
+      ttlSecondsAfterFinished: {{ .Values.ttlSecondsAfterFinished }}
+      {{- end }}
+      template:
+        metadata:
+          labels:
+            {{- include "mailjet-state-reporter.labels" . | nindent 12 }}
+            {{- with .Values.podLabels }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- with .Values.podAnnotations }}
+          annotations:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+        spec:
+          restartPolicy: Never
+          serviceAccountName: {{ include "mailjet-state-reporter.serviceAccountName" . }}
+          automountServiceAccountToken: {{ .Values.serviceAccount.automountServiceAccountToken }}
+          {{- with .Values.imagePullSecrets }}
+          imagePullSecrets:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.podSecurityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          containers:
+            - name: reporter
+              image: {{ include "mailjet-state-reporter.image" . | quote }}
+              imagePullPolicy: {{ .Values.image.pullPolicy }}
+              env:
+                - name: CONFIG_FILE
+                  value: {{ printf "/config/%s" .Values.settings.key | quote }}
+                - name: SYNC_STATE
+                  value: /state/sync_state.json
+                - name: LOG_FILE
+                  value: {{ .Values.logFile | quote }}
+                - name: MAILJET_APP_ID
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ include "mailjet-state-reporter.secretName" . }}
+                      key: {{ .Values.credentials.appIdKey }}
+                - name: MAILJET_APP_SECRET
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ include "mailjet-state-reporter.secretName" . }}
+                      key: {{ .Values.credentials.appSecretKey }}
+                {{- with .Values.extraEnv }}
+                {{- toYaml . | nindent 16 }}
+                {{- end }}
+              {{- with .Values.securityContext }}
+              securityContext:
+                {{- toYaml . | nindent 16 }}
+              {{- end }}
+              {{- with .Values.resources }}
+              resources:
+                {{- toYaml . | nindent 16 }}
+              {{- end }}
+              volumeMounts:
+                - name: config
+                  mountPath: /config
+                  readOnly: true
+                - name: state
+                  mountPath: /state
+                {{- if $logDir }}
+                - name: logs
+                  mountPath: {{ $logDir }}
+                {{- end }}
+          volumes:
+            - name: config
+              configMap:
+                name: {{ include "mailjet-state-reporter.configMapName" . }}
+                items:
+                  - key: {{ .Values.settings.key }}
+                    path: {{ .Values.settings.key }}
+            - name: state
+              persistentVolumeClaim:
+                claimName: {{ include "mailjet-state-reporter.claimName" . }}
+            {{- if $logDir }}
+            - name: logs
+              emptyDir:
+                {{- with .Values.logVolume.sizeLimit }}
+                sizeLimit: {{ . }}
+                {{- end }}
+            {{- end }}
+          {{- with .Values.nodeSelector }}
+          nodeSelector:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.affinity }}
+          affinity:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.tolerations }}
+          tolerations:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}

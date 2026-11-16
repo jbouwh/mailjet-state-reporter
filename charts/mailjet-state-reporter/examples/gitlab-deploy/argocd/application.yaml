@@ -1,0 +1,32 @@
+# Register this once in ArgoCD (e.g. through an app-of-apps); it is not synced from k8s/.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: mailjet-state-reporter
+  namespace: argocd
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: mailjet-reporter
+  sources:
+    # 1. The Helm chart from the app repository, pinned to a release tag
+    - repoURL: https://github.com/jbouwh/mailjet-state-reporter.git
+      targetRevision: v0.3.11
+      path: charts/mailjet-state-reporter
+      helm:
+        releaseName: mailjet-state-reporter
+        valueFiles:
+          - $deploy/values.yaml
+    # 2. The GitLab deploy repository as a reference for the values file
+    - repoURL: https://gitlab.example.com/example-group/mailjet-reporter-deploy.git
+      targetRevision: main
+      ref: deploy
+    # 3. Namespace, settings ConfigMap and Vault resources from the deploy repository
+    - repoURL: https://gitlab.example.com/example-group/mailjet-reporter-deploy.git
+      targetRevision: main
+      path: k8s
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

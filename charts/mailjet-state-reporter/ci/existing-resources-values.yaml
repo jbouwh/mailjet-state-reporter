@@ -1,0 +1,12 @@
+image:
+  digest: "sha256:5e191f74789135df950d93219b0ac66014fe1a85327e88401229841a240b8b22"
+settings:
+  existingConfigMap: mailjet-reporter-settings
+credentials:
+  create: true
+  appId: test-id
+  appSecret: test-secret
+persistence:
+  existingClaim: mailjet-reporter-state
+logFile: /logs/mailjet_state_reporter.log
+ttlSecondsAfterFinished: 86400

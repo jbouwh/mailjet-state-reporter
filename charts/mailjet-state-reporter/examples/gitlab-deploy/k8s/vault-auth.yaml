@@ -1,0 +1,13 @@
+apiVersion: secrets.hashicorp.com/v1beta1
+kind: VaultAuth
+metadata:
+  name: mailjet-reporter
+spec:
+  method: kubernetes
+  mount: kubernetes
+  kubernetes:
+    role: mailjet-state-reporter
+    # ServiceAccount created by the chart (release name mailjet-state-reporter)
+    serviceAccount: mailjet-state-reporter
+    audiences:
+      - vault
