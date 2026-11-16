@@ -5,8 +5,6 @@ namespace: mailjet-reporter
 
 resources:
   - namespace.yaml
-  - vault-auth.yaml
-  - vault-static-secret.yaml
 
 configMapGenerator:
   - name: mailjet-reporter-settings
@@ -17,3 +15,9 @@ generatorOptions:
   # The chart refers to the ConfigMap by name (settings.existingConfigMap).
   # Every job starts a new pod, so the next run always reads the current settings.
   disableNameSuffixHash: true
+
+# Credentials: the Secret mailjet-credentials (credentials.existingSecret in values.yaml).
+# With Vault: keep the component below. Without Vault: remove it and create the
+# Secret in another way, see the chart README ("Credentials without Vault").
+components:
+  - vault

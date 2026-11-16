@@ -1,0 +1,8 @@
+# Optional component: let the Vault Secrets Operator create the Secret mailjet-credentials.
+# Remove it from ../kustomization.yaml to use a Secret that is created in another way.
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+
+resources:
+  - vault-auth.yaml
+  - vault-static-secret.yaml

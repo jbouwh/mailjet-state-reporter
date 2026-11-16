@@ -15,7 +15,7 @@ The container runs as UID 2001 with a read-only root filesystem. Requires image 
 
 ## Install
 
-The Mailjet master API credentials are read from a Secret with the keys `MAILJET_APP_ID` and `MAILJET_APP_SECRET`, for example synchronized from HashiCorp Vault:
+The Mailjet master API credentials are read from a Secret with the keys `MAILJET_APP_ID` and `MAILJET_APP_SECRET`. HashiCorp Vault is optional: the Secret can be synchronized from Vault, or created in another way, for example:
 
 ```bash
 kubectl -n mailjet-reporter create secret generic mailjet-credentials \
@@ -44,7 +44,7 @@ kubectl -n mailjet-reporter logs job/manual-run
 
 ## Deploying from GitLab with ArgoCD
 
-The chart is designed to be used from a GitLab deploy repository that is synced by ArgoCD. The chart itself stays in this (GitHub) repository and is pinned to a release tag; the GitLab repository only holds the values, `settings.yaml` and the Vault resources. A complete, tested example is in [`examples/gitlab-deploy`](examples/gitlab-deploy).
+The chart is designed to be used from a GitLab deploy repository that is synced by ArgoCD. The chart itself stays in this (GitHub) repository and is pinned to a release tag; the GitLab repository only holds the values, `settings.yaml` and, optionally, the Vault resources. A complete, tested example is in [`examples/gitlab-deploy`](examples/gitlab-deploy).
 
 ```
 mailjet-reporter-deploy/             (GitLab)
@@ -53,24 +53,49 @@ mailjet-reporter-deploy/             (GitLab)
 ├── argocd/
 │   └── application.yaml             ArgoCD Application (registered once, e.g. via app-of-apps)
 └── k8s/
-    ├── kustomization.yaml           namespace, Vault resources and the settings ConfigMap
+    ├── kustomization.yaml           namespace, the settings ConfigMap and the optional vault component
     ├── settings.yaml                the reporter configuration
     ├── namespace.yaml
-    ├── vault-auth.yaml              VaultAuth (Kubernetes auth)
-    └── vault-static-secret.yaml     VaultStaticSecret -> Secret mailjet-credentials
+    └── vault/                       optional Kustomize component
+        ├── kustomization.yaml
+        ├── vault-auth.yaml          VaultAuth (Kubernetes auth)
+        └── vault-static-secret.yaml VaultStaticSecret -> Secret mailjet-credentials
 ```
 
 How the parts fit together:
 
 - **Chart**: the ArgoCD `Application` uses three sources: the chart from `https://github.com/jbouwh/mailjet-state-reporter.git` at path `charts/mailjet-state-reporter` and a release tag, the GitLab repository as `ref: deploy` for `$deploy/values.yaml`, and the GitLab path `k8s/` for the other resources. Use `releaseName: mailjet-state-reporter`, so the CronJob, ServiceAccount and PVC are named `mailjet-state-reporter` and `mailjet-state-reporter-state`.
 - **`settings.yaml`**: Kustomize creates the ConfigMap `mailjet-reporter-settings` from `k8s/settings.yaml` with `disableNameSuffixHash: true`, and `values.yaml` points to it with `settings.existingConfigMap`. The name must be stable because the chart refers to it. Every job starts a new pod, so the next run always reads the current settings. Kustomize only loads files inside the kustomization directory, so `settings.yaml` lives in `k8s/`.
-- **Credentials**: the Vault Secrets Operator creates the Secret `mailjet-credentials` (`credentials.existingSecret`). The `VaultAuth` uses the ServiceAccount `mailjet-state-reporter` that the chart creates.
+- **Credentials**: the chart reads the Secret `mailjet-credentials` (`credentials.existingSecret`). In the example the optional `vault` component lets the Vault Secrets Operator create it; its `VaultAuth` uses the ServiceAccount `mailjet-state-reporter` that the chart creates. Without Vault, see [Credentials without Vault](#credentials-without-vault).
 - **State**: ArgoCD does not honour `helm.sh/resource-policy: keep`, so set `persistence.annotations` to `argocd.argoproj.io/sync-options: Prune=false,Delete=false`.
 - **Versions**: keep the chart `targetRevision` in the `Application`, `REPORTER_REF` in `.gitlab-ci.yml` and `image.tag`/`image.digest` in `values.yaml` on the same release.
-- **CI**: the pipeline clones the chart at `REPORTER_REF`, runs `helm lint --strict` and `helm template` with `values.yaml`, renders `k8s/` with Kustomize and validates everything with `kubeconform` (including the Vault CRDs). Make the pipeline required ("Pipelines must succeed" and a protected default branch), because ArgoCD syncs the default branch.
+- **CI**: the pipeline clones the chart at `REPORTER_REF`, runs `helm lint --strict` and `helm template` with `values.yaml`, renders `k8s/` with Kustomize and validates everything with `kubeconform` (including CRDs such as the Vault resources). Make the pipeline required ("Pipelines must succeed" and a protected default branch), because ArgoCD syncs the default branch.
 - **NOTES**: ArgoCD renders the chart with `helm template`, so the install notes are not shown. Start a manual run with `kubectl -n mailjet-reporter create job --from=cronjob/mailjet-state-reporter manual-run`.
 
 The chart is available from release `v0.3.11`, which is also the version used in the example.
+
+## Credentials without Vault
+
+The chart does not depend on Vault: it only needs a Secret with the keys `MAILJET_APP_ID` and `MAILJET_APP_SECRET`, set with `credentials.existingSecret`. To use the GitLab example without Vault, remove the `vault` component from `k8s/kustomization.yaml` (and the `k8s/vault/` folder), keep `credentials.existingSecret: mailjet-credentials` in `values.yaml`, and create the Secret in one of these ways:
+
+- **Manually**, once per cluster. The Secret is not in Git, so ArgoCD does not manage or prune it:
+
+  ```bash
+  kubectl -n mailjet-reporter create secret generic mailjet-credentials \
+    --from-literal=MAILJET_APP_ID=xxxx --from-literal=MAILJET_APP_SECRET=xxxx
+  ```
+
+  To rotate the credentials, run the same command with `--dry-run=client -o yaml | kubectl apply -f -`. The Secret is removed when the namespace is deleted.
+- **Sealed Secrets** (requires the Sealed Secrets controller): commit an encrypted `SealedSecret` to `k8s/` and add it to `resources` in `k8s/kustomization.yaml`:
+
+  ```bash
+  kubectl -n mailjet-reporter create secret generic mailjet-credentials --dry-run=client -o yaml \
+    --from-literal=MAILJET_APP_ID=xxxx --from-literal=MAILJET_APP_SECRET=xxxx \
+    | kubeseal -o yaml > k8s/mailjet-credentials-sealed.yaml
+  ```
+- **External Secrets Operator** or another secret manager: create an `ExternalSecret` (or equivalent) with target `mailjet-credentials` instead of the `vault` component.
+
+Do not use `credentials.create` with real credentials in a values file in Git; it is meant for local tests only.
 
 ## Releasing
 
