@@ -133,13 +133,13 @@ jbouwh/mailjet-state-reporter:latest
 
 ## Using the Helm chart
 
-A Helm chart is available in [`charts/mailjet-state-reporter`](charts/mailjet-state-reporter). It runs the reporter as a Kubernetes CronJob (default every day at 06:00 Europe/Amsterdam) and mounts `settings.yaml` read-only from a ConfigMap:
+A Helm chart is available in [`charts/mailjet-state-reporter`](charts/mailjet-state-reporter) and is published on the GitHub Container Registry with every release (chart version = release without the `v`). It runs the reporter as a Kubernetes CronJob (default every day at 06:00 Europe/Amsterdam) and mounts `settings.yaml` read-only from a ConfigMap:
 
 ```bash
-helm install mailjet-reporter ./charts/mailjet-state-reporter \
+helm install mailjet-reporter oci://ghcr.io/jbouwh/charts/mailjet-state-reporter --version 0.3.11 \
   --namespace mailjet-reporter --create-namespace \
   --set-file settings.content=config/settings.yaml \
   --set credentials.existingSecret=mailjet-credentials
 ```
 
-See the [chart README](charts/mailjet-state-reporter/README.md) for all options.
+See the [chart README](charts/mailjet-state-reporter/README.md) for all options, using a registry proxy such as Harbor, deploying with ArgoCD from GitLab and a test setup for Docker Desktop.

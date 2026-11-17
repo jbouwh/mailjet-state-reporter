@@ -1,6 +1,8 @@
 # Default values for mailjet-state-reporter.
 
 image:
+  # Add a registry or proxy prefix if needed, e.g.
+  # harbor.example.com/dockerhub/jbouwh/mailjet-state-reporter
   repository: jbouwh/mailjet-state-reporter
   # Defaults to the chart appVersion
   tag: ""

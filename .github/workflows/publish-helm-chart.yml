@@ -1,0 +1,88 @@
+name: Publish Helm chart to GHCR
+
+on:
+  release:
+    types:
+      - released
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing release tag to publish the chart from (e.g. v0.3.11)
+        required: true
+
+env:
+  CHART_PATH: charts/mailjet-state-reporter
+  HELM_VERSION: v4.3.2
+
+jobs:
+  publish_chart:
+    name: Push Helm chart to ghcr.io
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: read
+      attestations: write
+      id-token: write
+    steps:
+      - name: Determine the release tag
+        id: release
+        env:
+          TAG: ${{ github.event.release.tag_name || inputs.tag }}
+        run: |
+          if ! [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Tag '$TAG' is not a release tag like v1.2.3"
+            exit 1
+          fi
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          # OCI tags are the chart version (SemVer, without the leading v)
+          echo "version=${TAG#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Check out the release tag
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.release.outputs.tag }}
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: ${{ env.HELM_VERSION }}
+
+      - name: Lint the chart
+        run: |
+          for values in "$CHART_PATH"/ci/*-values.yaml; do
+            helm lint --strict "$CHART_PATH" -f "$values"
+          done
+
+      - name: Package the chart
+        id: package
+        env:
+          TAG: ${{ steps.release.outputs.tag }}
+          VERSION: ${{ steps.release.outputs.version }}
+        run: |
+          # The chart version and appVersion always follow the release tag,
+          # so the published chart uses the image of the same release by default.
+          helm package "$CHART_PATH" --version "$VERSION" --app-version "$TAG" --destination dist
+          echo "file=dist/mailjet-state-reporter-${VERSION}.tgz" >> "$GITHUB_OUTPUT"
+
+      - name: Log in to ghcr.io
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: echo "$GITHUB_TOKEN" | helm registry login ghcr.io --username "${{ github.actor }}" --password-stdin
+
+      - name: Push the chart
+        id: push
+        env:
+          OWNER: ${{ github.repository_owner }}
+        run: |
+          owner="${OWNER,,}"
+          helm push "${{ steps.package.outputs.file }}" "oci://ghcr.io/${owner}/charts" 2>&1 | tee push.log
+          digest="$(grep -oE 'sha256:[0-9a-f]{64}' push.log | head -1)"
+          echo "digest=$digest" >> "$GITHUB_OUTPUT"
+          echo "name=ghcr.io/${owner}/charts/mailjet-state-reporter" >> "$GITHUB_OUTPUT"
+
+      - name: Generate artifact attestation
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-name: ${{ steps.push.outputs.name }}
+          subject-digest: ${{ steps.push.outputs.digest }}
+          push-to-registry: true

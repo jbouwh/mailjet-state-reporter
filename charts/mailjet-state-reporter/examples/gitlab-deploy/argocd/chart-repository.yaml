@@ -1,0 +1,19 @@
+# Register this once in ArgoCD, next to the Application. It tells ArgoCD that the
+# chart repoURL is an OCI registry (the Harbor proxy cache project for ghcr.io).
+apiVersion: v1
+kind: Secret
+metadata:
+  name: harbor-ghcr-charts
+  namespace: argocd
+  labels:
+    argocd.argoproj.io/secret-type: repository
+stringData:
+  name: harbor-ghcr-charts
+  type: helm
+  enableOCI: "true"
+  url: harbor.example.com/ghcr/jbouwh/charts
+  # Only needed when the Harbor project is not public. Never commit real
+  # credentials; create this Secret outside Git or use a Harbor robot account
+  # through your secret manager.
+  # username: robot$argocd
+  # password: xxxx

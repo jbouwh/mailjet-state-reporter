@@ -1,10 +1,14 @@
 # CI for the GitLab deploy repository. ArgoCD only syncs the default branch,
 # so make these jobs required ("Pipelines must succeed" + protected branch).
 variables:
-  # Release of the app repository: chart version, must match image.tag in values.yaml
-  REPORTER_REF: "v0.3.11"
-  # GitLab mirror of the app repository (path within this GitLab instance)
-  REPORTER_PROJECT: "example-group/mailjet-state-reporter"
+  # Harbor proxy cache projects (registry prefixes) for Docker Hub, ghcr.io and registry.k8s.io
+  DOCKERHUB_PROXY: "harbor.example.com/dockerhub"
+  GHCR_PROXY: "harbor.example.com/ghcr"
+  K8S_REGISTRY_PROXY: "harbor.example.com/k8s"
+  # Helm chart (OCI) and its version; must match targetRevision in argocd/application.yaml
+  # and image.tag in values.yaml (chart 0.3.11 = image v0.3.11)
+  CHART: "oci://${GHCR_PROXY}/jbouwh/charts/mailjet-state-reporter"
+  CHART_VERSION: "0.3.11"
   RELEASE_NAME: "mailjet-state-reporter"
   NAMESPACE: "mailjet-reporter"
   YAMLLINT_VERSION: "1.38.0"
@@ -19,7 +23,8 @@ workflow:
 
 yamllint:
   stage: validate
-  image: python:3.14-alpine
+  # Official Docker Hub images are in the library/ namespace of the proxy cache
+  image: ${DOCKERHUB_PROXY}/library/python:3.14-alpine
   script:
     - pip install --quiet "yamllint==${YAMLLINT_VERSION}"
     - yamllint -c .yamllint.yaml -f colored .
@@ -27,16 +32,18 @@ yamllint:
 render-chart:
   stage: validate
   image:
-    name: alpine/helm:4.3.2
+    name: ${DOCKERHUB_PROXY}/alpine/helm:4.3.2
     entrypoint: [""]
   script:
-    # Uses the job token, so allow this project in the job token settings of the mirror
+    # Optional: log in when the Harbor project is not public (set masked CI/CD variables)
     - >-
-      git clone --quiet --depth 1 --branch "${REPORTER_REF}"
-      "https://gitlab-ci-token:${CI_JOB_TOKEN}@${CI_SERVER_HOST}/${REPORTER_PROJECT}.git" /tmp/app
-    - helm lint --strict /tmp/app/charts/mailjet-state-reporter -f values.yaml
+      if [ -n "${HARBOR_USERNAME:-}" ]; then
+      echo "${HARBOR_PASSWORD}" | helm registry login "${GHCR_PROXY%%/*}"
+      --username "${HARBOR_USERNAME}" --password-stdin; fi
+    - helm pull "${CHART}" --version "${CHART_VERSION}" --untar --untardir /tmp/chart
+    - helm lint --strict /tmp/chart/mailjet-state-reporter -f values.yaml
     - >-
-      helm template "${RELEASE_NAME}" /tmp/app/charts/mailjet-state-reporter
+      helm template "${RELEASE_NAME}" /tmp/chart/mailjet-state-reporter
       --namespace "${NAMESPACE}" -f values.yaml > chart.yaml
   artifacts:
     paths:
@@ -45,7 +52,7 @@ render-chart:
 render-kustomize:
   stage: validate
   image:
-    name: registry.k8s.io/kustomize/kustomize:v5.4.3
+    name: ${K8S_REGISTRY_PROXY}/kustomize/kustomize:v5.4.3
     entrypoint: [""]
   script:
     - kustomize build k8s > kustomize.yaml
@@ -57,7 +64,7 @@ k8s-manifests:
   stage: validate
   needs: [render-chart, render-kustomize]
   image:
-    name: ghcr.io/yannh/kubeconform:v0.6.7-alpine
+    name: ${GHCR_PROXY}/yannh/kubeconform:v0.6.7-alpine
     entrypoint: [""]
   script:
     - >-

@@ -10,10 +10,11 @@ spec:
     server: https://kubernetes.default.svc
     namespace: mailjet-reporter
   sources:
-    # 1. The Helm chart from the GitLab mirror of the app repository, pinned to a release tag
-    - repoURL: https://gitlab.example.com/example-group/mailjet-state-reporter.git
-      targetRevision: v0.3.11
-      path: charts/mailjet-state-reporter
+    # 1. The Helm chart from ghcr.io (OCI), pulled through the Harbor proxy cache.
+    #    No oci:// prefix here; argocd/chart-repository.yaml enables OCI for this URL.
+    - repoURL: harbor.example.com/ghcr/jbouwh/charts
+      chart: mailjet-state-reporter
+      targetRevision: 0.3.11
       helm:
         releaseName: mailjet-state-reporter
         valueFiles:
