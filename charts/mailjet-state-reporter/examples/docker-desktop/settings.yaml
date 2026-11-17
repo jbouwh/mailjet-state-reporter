@@ -1,0 +1,36 @@
+# Test configuration for the Docker Desktop cluster.
+# With dummy credentials the run stops at the Mailjet API (logged on stderr), which
+# still tests the ConfigMap, the read-only /config, the /state volume and the logging.
+# With real credentials, use a real subaccount name and your own address as recipient:
+# the run then sends a real report.
+
+status_translations:
+  no_data: "No data for period"
+
+global_settings:
+  report_days: "1234567" # Every day, so a manual run always reports
+  default_max_report_days: 1
+  timezone: "Europe/Amsterdam"
+  time_format: "%Y-%m-%d %H:%M"
+  date_format: "%d-%m-%Y"
+
+profiles:
+  test:
+    template_id: 1234567 # Mailjet template for the report
+    from_email: "noreply@example.com"
+    from_name: "Mailjet State Reporter test"
+    subject: "Test report {} - {}"
+    time_format: "%m-%d %H:%M"
+    report_in_detail:
+      - "blocked"
+      - "softbounced"
+      - "hardbounced"
+    skip_if_no_details: false
+    skip_if_no_data: false
+
+subaccount_reports:
+  - name: "TEST SUBACCOUNT" # Name of a Mailjet subaccount
+    profile: "test"
+    recipients:
+      - to_email: "you@example.com"
+        to_name: "Test recipient"

@@ -1,0 +1,26 @@
+# Helm values for a local test on the Docker Desktop Kubernetes cluster (single node).
+# Used by test.sh; settings.content is set from settings.yaml with --set-file.
+
+# Only run jobs that are started by hand (test.sh creates one from the CronJob)
+suspend: true
+
+credentials:
+  # Created by test.sh from MAILJET_APP_ID / MAILJET_APP_SECRET
+  existingSecret: mailjet-credentials
+
+persistence:
+  # Use the default StorageClass: "standard" (kind mode) or "hostpath" (kubeadm mode)
+  storageClass: ""
+  size: 10Mi
+  # Remove the test state on helm uninstall
+  keep: false
+
+# Keep finished test jobs (and their logs) for one hour
+ttlSecondsAfterFinished: 3600
+
+resources:
+  requests:
+    cpu: 10m
+    memory: 32Mi
+  limits:
+    memory: 128Mi
