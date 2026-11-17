@@ -67,7 +67,10 @@ jobs:
       - name: Log in to ghcr.io
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: echo "$GITHUB_TOKEN" | helm registry login ghcr.io --username "${{ github.actor }}" --password-stdin
+        run: |
+          # Helm uses its own registry config; the attestation step needs the Docker login
+          echo "$GITHUB_TOKEN" | helm registry login ghcr.io --username "${{ github.actor }}" --password-stdin
+          echo "$GITHUB_TOKEN" | docker login ghcr.io --username "${{ github.actor }}" --password-stdin
 
       - name: Push the chart
         id: push
