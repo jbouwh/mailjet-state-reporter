@@ -54,7 +54,7 @@ global_settings:
 
 profiles:
   relay:
-    template_id: 1234567 # The mailjet template to send the status report with
+    template_id: 1234567 # Required: the Mailjet template to send the report with (example: mailjet/email_template_example.mjml)
     from_email: "noreply-bounce-service@example.com"
     from_name: "Example Bounce Service"
     subject: "Example Bounce Report {} - {}" # The subject will be formatted with subaccount name and report date
@@ -79,6 +79,8 @@ subaccount_reports:
     skip_if_no_details: true # Default derived from profile setting
     skip_if_no_data: true # Default derived from profile setting
 ```
+
+`template_id` is required: the ID of a Mailjet template. An example template (MJML) is in [mailjet/email_template_example.mjml](mailjet/email_template_example.mjml); import it in Mailjet and use its ID.
 
 ## Running the script
 

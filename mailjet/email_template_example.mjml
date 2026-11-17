@@ -1,0 +1,106 @@
+<mjml owa="desktop" version="4.14.1">
+  <mj-head>
+    <mj-raw>
+      <meta name="supported-color-scheme" value="light dark">
+    </mj-raw>
+    <mj-style>
+
+    :root {
+      color-scheme: light dark;
+    }
+
+    </mj-style>
+    <mj-preview>
+      Transactionele mail
+    </mj-preview>
+  </mj-head>
+  <mj-body background-color="#b4b4b4" color="#55575d" font-family="Arial, sans-serif">
+    <mj-section background-repeat="repeat" background-size="auto" padding="20px 0px 20px 0px">
+      <mj-column>
+        <mj-text font-family="Verdana, Helvetica, Arial, sans-serif" padding-bottom="0px" padding-top="0px" padding="0px 0px 0px 25px">
+          <p class="text-build-content" style="margin: 10px 0; margin-top: 10px; margin-bottom: 10px;">CIV IRN BOS MRaaS-dienst</p>
+        </mj-text>
+      </mj-column>
+    </mj-section>
+    <mj-section background-repeat="repeat" background-size="auto" border="1px solid #000000" padding-bottom="0px" padding-top="0px" padding="20px 0">
+      <mj-column>
+        <mj-image align="center" alt="Rijkswaterstaat Logo" border-radius="0" border="none" container-background-color="#f9e11e" fluid-on-mobile="true" height="auto" padding-bottom="0px" padding-left="0px" padding-right="0px" padding-top="0px" padding="10px 25px" src="https://0up4g.mjt.lu/img2/0up4g/9208c0b2-7434-4342-8ba2-7cfcf4e7514e/content" target="_blank" width="609px"></mj-image>
+      </mj-column>
+    </mj-section>
+    <mj-section background-repeat="repeat" background-size="auto" border="1px solid #000000" padding="0px 0px 0px 0px" text-align="center" vertical-align="top">
+      <mj-column>
+        <mj-text align="left" color="#000000" container-background-color="#007bc7" font-family="Arial, sans-serif" font-size="13px" letter-spacing="normal" padding-bottom="0px" padding-top="0px" padding="0px 20px 0px 20px">
+          <p class="text-build-content" style="margin: 10px 0; margin-top: 10px; margin-bottom: 10px;"><span style="color:#ffffff;font-size:10px;"><b>Je kunt niet reageren op deze e-mail.</b> Deze e-mail is automatisch gegenereerd en verzonden. Deze e-mail krijg je omdat dit onderdeel is van de aangevraagde MRaaS-dienstverlening.</span></p>
+        </mj-text>
+      </mj-column>
+    </mj-section>
+    <mj-section background-repeat="repeat" background-size="auto" border="1px solid #000000" padding="0px 0px 0px 0px" text-align="center" vertical-align="top">
+      <mj-column>
+        <mj-text container-background-color="#ffffff" font-family="Verdana, Helvetica, Arial, sans-serif" padding-bottom="0px" padding-top="0px" padding="0px 20px 0px 20px">
+          <h1 class="text-build-content" style="margin-top: 10px; margin-bottom: 10px"><span style="color:#007bc7;font-family:Arial, sans-serif;font-size:20px;line-height:22px;"><b>MRaaS Bounce Rapportage</b></span></h1>
+        </mj-text>
+      </mj-column>
+    </mj-section>
+    <mj-section background-color="#ffffff" background-repeat="repeat" background-size="auto" padding="0px 0px 0px 0px">
+      <mj-column>
+        <mj-divider border-color="#007bc" border-style="solid" border-width="2px" container-background-color="#cccccc" padding="0px 0px 0px 0px" width="100%"></mj-divider>
+      </mj-column>
+    </mj-section>
+    <mj-section background-color="#ffffff" background-repeat="repeat" background-size="auto" border="1px solid #000000" padding="0px 0px 0px 0px" text-align="center" vertical-align="top">
+      <mj-column width="33%">
+        <mj-text align="left" color="#000000" font-family="Verdana, Helvetica, Arial, sans-serif" font-size="13px" letter-spacing="normal" padding-bottom="0px" padding-top="0px" padding="0px 20px 0px 20px">
+          <p class="text-build-content" style="margin: 10px 0; margin-top: 10px; margin-bottom: 10px;"><span style="font-family:Verdana, Arial, sans-serif;font-size:12px;">Periode:</span></p>
+        </mj-text>
+        <mj-text align="left" color="#000000" font-family="Verdana, Helvetica, Arial, sans-serif" font-size="13px" letter-spacing="normal" padding-bottom="0px" padding-top="0px" padding="0px 20px 0px 20px">
+          <p class="text-build-content" style="margin: 10px 0; margin-top: 10px; margin-bottom: 10px;"><span style="font-family:Arial, sans-serif;font-size:12px;">Omgeving:</span></p>
+        </mj-text>
+      </mj-column>
+      <mj-column width="66%">
+        <mj-text align="left" color="#000000" font-family="Arial, sans-serif" font-size="13px" letter-spacing="normal" padding-bottom="0px" padding-top="0px" padding="0px 5px 0px 5px">
+          <p class="text-build-content" style="margin: 10px 0; margin-top: 10px; margin-bottom: 10px;"><span style="font-size:12px;">{{var:rep_start:"&lt;start rapportageperiode&gt;"}} - {{var:rep_end:"&lt;einde rapportageperiode&gt;"}}</span></p>
+        </mj-text>
+        <mj-text align="left" color="#000000" font-family="Arial, sans-serif" font-size="13px" letter-spacing="normal" padding-bottom="0px" padding-top="0px" padding="0px 5px 0px 5px">
+          <p class="text-build-content" style="margin: 10px 0; margin-top: 10px; margin-bottom: 10px;"><span style="font-size:12px;">{{var:sub_account:"&lt;subaccount&gt;"}}&nbsp;</span></p>
+        </mj-text>
+      </mj-column>
+    </mj-section>
+    <mj-raw>
+      {% if var:bounce_data != "undefined" %}
+    </mj-raw>
+    <mj-section background-color="#ffffff" background-repeat="repeat" background-size="auto" border="1px solid #000000" padding="10px 0px 10px 0px" text-align="center" vertical-align="top">
+      <mj-column>
+        <mj-text align="left" color="#000000" font-family="Arial, sans-serif" font-size="13px" letter-spacing="normal" padding-bottom="0px" padding-top="0px" padding="0px 20px 0px 20px">
+          <p class="text-build-content" style="margin: 10px 0; margin-top: 10px; margin-bottom: 10px;"><b>Bounce Meldingen</b></p>
+        </mj-text>
+        <mj-text align="left" color="#000000" font-family="Arial, sans-serif" font-size="13px" letter-spacing="normal" padding-bottom="0px" padding-top="0px" padding="0px 20px 0px 20px">
+          <p class="text-build-content" style="margin: 10px 0; margin-top: 10px; margin-bottom: 10px;"><span style="font-size:10px;">{{var:bounce_data:""}}</span></p>
+        </mj-text>
+      </mj-column>
+    </mj-section>
+    <mj-raw>
+      {% endif %}
+    </mj-raw>
+    <mj-section background-color="#ffffff" background-repeat="repeat" background-size="auto" border="1px solid #000000" padding="10px 0px 10px 0px" text-align="center" vertical-align="top">
+      <mj-column>
+        <mj-text align="left" color="#000000" font-family="Arial, sans-serif" font-size="13px" letter-spacing="normal" padding-bottom="0px" padding-top="0px" padding="0px 20px 0px 20px">
+          <p class="text-build-content" style="margin: 10px 0; margin-top: 10px; margin-bottom: 10px;"><b>Afleveringsstatistieken</b></p>
+        </mj-text>
+        <mj-text align="left" color="#000000" font-family="Arial, sans-serif" font-size="13px" letter-spacing="normal" padding-bottom="0px" padding-top="0px" padding="0px 20px 0px 20px">
+          <p class="text-build-content" style="margin: 10px 0; margin-top: 10px; margin-bottom: 10px;"><span style="font-size:11px;">{{var:delivery_stats:""}}</span></p>
+        </mj-text>
+      </mj-column>
+    </mj-section>
+    <mj-section background-color="#8fcae7" background-repeat="repeat" background-size="auto" padding="5px 0px 5px 0px" text-align="center" vertical-align="top">
+      <mj-column width="66%">
+        <mj-text align="left" color="#000000" font-family="Arial, sans-serif" font-size="13px" letter-spacing="normal" padding-bottom="0px" padding-top="0px" padding="0px 20px 0px 20px">
+          <p class="text-build-content" style="margin: 10px 0; margin-top: 10px; margin-bottom: 10px;"><span style="font-size:10px;">De inhoud van dit bericht is uitsluitend bestemd voor geadresseerde. Gebruik van de inhoud van dit bericht door anderen zonder toestemming van Rijkswaterstaat is onrechtmatig. Mocht dit bericht ten onrechte bij u terecht komen, dan verzoeken wij u dit direct te melden aan mraas@rws.nl en het bericht te vernietigen. Aan de inhoud van dit bericht kunnen geen rechten worden ontleend.</span></p>
+        </mj-text>
+      </mj-column>
+      <mj-column width="33%">
+        <mj-text align="left" color="#000000" font-family="Arial, sans-serif" font-size="13px" letter-spacing="normal" padding-bottom="0px" padding-top="0px" padding="10px 25px">
+          <p class="text-build-content" style="margin: 10px 0; margin-top: 10px; margin-bottom: 10px;"><span style="font-size:10px;">Contact: CIV IRN BOS KA</span><br><span style="font-size:10px;">E-mailadres: mraas@rws.nl</span></p>
+        </mj-text>
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>
