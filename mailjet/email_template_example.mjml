@@ -43,7 +43,7 @@
     </mj-section>
     <mj-section background-color="#ffffff" background-repeat="repeat" background-size="auto" padding="0px 0px 0px 0px">
       <mj-column>
-        <mj-divider border-color="#007bc" border-style="solid" border-width="2px" container-background-color="#cccccc" padding="0px 0px 0px 0px" width="100%"></mj-divider>
+        <mj-divider border-color="#007bc7" border-style="solid" border-width="2px" container-background-color="#cccccc" padding="0px 0px 0px 0px" width="100%"></mj-divider>
       </mj-column>
     </mj-section>
     <mj-section background-color="#ffffff" background-repeat="repeat" background-size="auto" border="1px solid #000000" padding="0px 0px 0px 0px" text-align="center" vertical-align="top">
